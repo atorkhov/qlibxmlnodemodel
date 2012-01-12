@@ -34,10 +34,14 @@
 #include <QSimpleXmlNodeModel>
 #include <QVector>
 
+class QLibXmlNodeModelPrivate;
+
 class QLibXmlNodeModel : public QSimpleXmlNodeModel
 {
- public:
-    QLibXmlNodeModel(const QXmlNamePool &namePool);
+    friend class QLibXmlNodeModelPrivate;
+
+public:
+    QLibXmlNodeModel(const QXmlNamePool &namePool, const QByteArray &source, const QUrl &uri);
 
     virtual QXmlNodeModelIndex::DocumentOrder compareOrder(const QXmlNodeModelIndex&, const QXmlNodeModelIndex&) const;
     virtual QXmlName name(const QXmlNodeModelIndex &node) const;
@@ -45,8 +49,12 @@ class QLibXmlNodeModel : public QSimpleXmlNodeModel
     virtual QXmlNodeModelIndex::NodeKind kind(const QXmlNodeModelIndex &node) const;
     virtual QXmlNodeModelIndex root(const QXmlNodeModelIndex &node) const;
     virtual QVariant typedValue(const QXmlNodeModelIndex &node) const;
- protected:
+
+protected:
     virtual QVector<QXmlNodeModelIndex> attributes(const QXmlNodeModelIndex &element) const;
     virtual QXmlNodeModelIndex nextFromSimpleAxis(SimpleAxis, const QXmlNodeModelIndex&) const;
+
+private:
+    QLibXmlNodeModelPrivate *d;
 };
 

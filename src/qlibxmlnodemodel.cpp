@@ -31,14 +31,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <libxml/HTMLparser.h>
+#include <libxml/tree.h>
+
 #include "qlibxmlnodemodel.h"
+
+// Internal private data
+class QLibXmlNodeModelPrivate
+{
+public:
+    QLibXmlNodeModel *model;
+    QUrl uri;
+
+    xmlDoc *doc;
+    xmlNode *root_element;
+
+    QLibXmlNodeModelPrivate(QLibXmlNodeModel *model)
+        : model(model), doc(NULL), root_element(NULL)
+    {
+    }
+
+    // Parses the given source tree
+    void parse(const QByteArray &source)
+    {
+    }
+};
 
 /*!
  * Constructor passes \a pool to the base class
  */
-QLibXmlNodeModel::QLibXmlNodeModel(const QXmlNamePool& pool)
-  : QSimpleXmlNodeModel(pool)
+QLibXmlNodeModel::QLibXmlNodeModel(const QXmlNamePool& namePool, const QByteArray &source, const QUrl &uri)
+    : QSimpleXmlNodeModel(namePool), d(new QLibXmlNodeModelPrivate(this))
 {
+    d->uri = uri;
+    d->parse(source);
 }
 
 /*!
