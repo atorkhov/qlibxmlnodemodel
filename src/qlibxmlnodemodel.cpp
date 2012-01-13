@@ -31,6 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <QDebug>
+
 #include <libxml/HTMLparser.h>
 #include <libxml/tree.h>
 
@@ -54,6 +56,30 @@ public:
     // Parses the given source tree
     void parse(const QByteArray &source)
     {
+        doc = htmlReadMemory(source.data(), source.size(), uri.toString().toUtf8(), "utf-8", 0);
+
+        if (doc == NULL) {
+            qDebug() << "could not parse source" << source;
+        }
+
+        root_element = xmlDocGetRootElement(doc);
+    }
+
+    // Converts a model index to a HTML node
+    xmlNode *toNode(const QXmlNodeModelIndex &index) const
+    {
+        return (xmlNode *)index.internalPointer();
+    }
+
+    // Converts a HTML node to a model index
+    QXmlNodeModelIndex toNodeIndex(xmlNode *node) const
+    {
+        return model->createIndex((void *)node);
+    }
+
+    QXmlNodeModelIndex toNodeIndex(xmlDoc *node) const
+    {
+        return model->createIndex((void *)node);
     }
 };
 
@@ -68,6 +94,14 @@ QLibXmlNodeModel::QLibXmlNodeModel(const QXmlNamePool& namePool, const QByteArra
 }
 
 /*!
+ * Destructor
+ */
+QLibXmlNodeModel::~QLibXmlNodeModel()
+{
+    delete d;
+}
+
+/*!
  * This function is called by the QtXmlPatterns query engine when it
  * wants to move to the next node in the model. It moves along an \a
  * axis, \e from the node specified by \a nodeIndex.
@@ -75,6 +109,43 @@ QLibXmlNodeModel::QLibXmlNodeModel(const QXmlNamePool& namePool, const QByteArra
 QXmlNodeModelIndex
 QLibXmlNodeModel::nextFromSimpleAxis(SimpleAxis axis, const QXmlNodeModelIndex &nodeIndex) const
 {
+    xmlNode *node = d->toNode(nodeIndex);
+    qDebug() << "nextFromSimpleAxis()" << node << axis;
+    if (!node) {
+        qDebug() << "Invalid node";
+        return QXmlNodeModelIndex();
+    }
+
+    switch (axis) {
+        case Parent:
+            qDebug() << "Parent " << node->parent;
+            if (!node->parent) {
+                return QXmlNodeModelIndex();
+            }
+            return d->toNodeIndex(node->parent);
+
+        case FirstChild:
+            qDebug() << "Child " << node->children;
+            if (!node->children) {
+                return QXmlNodeModelIndex();
+            }
+            return d->toNodeIndex(node->children);
+
+        case PreviousSibling:
+            qDebug() << "Prev " << node->prev;
+            if (!node->prev) {
+                return QXmlNodeModelIndex();
+            }
+            return d->toNodeIndex(node->prev);
+
+        case NextSibling:
+            qDebug() << "Next " << node->next;
+            if (!node->next) {
+                return QXmlNodeModelIndex();
+            }
+            return d->toNodeIndex(node->next);
+    }
+
     Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid axis!");
     return QXmlNodeModelIndex();
 }
@@ -89,7 +160,7 @@ QLibXmlNodeModel::nextFromSimpleAxis(SimpleAxis axis, const QXmlNodeModelIndex &
 QUrl QLibXmlNodeModel::documentUri(const QXmlNodeModelIndex &node) const
 {
     Q_UNUSED(node);
-    return QUrl();
+    return d->uri;
 }
 
 /*!
@@ -99,8 +170,36 @@ QUrl QLibXmlNodeModel::documentUri(const QXmlNodeModelIndex &node) const
  * dm:node-kind() accessor.
  */
 QXmlNodeModelIndex::NodeKind
-QLibXmlNodeModel::kind(const QXmlNodeModelIndex &node) const
+QLibXmlNodeModel::kind(const QXmlNodeModelIndex &nodeIndex) const
 {
+    xmlNode *node = d->toNode(nodeIndex);
+    qDebug() << "kind()" << node;
+    if (!node) {
+        qDebug() << "Invalid node";
+        return QXmlNodeModelIndex::Element;
+    }
+
+    qDebug() << "Node type" << node->type;
+
+    switch (node->type) {
+        case XML_ELEMENT_NODE:
+            return QXmlNodeModelIndex::Element;
+        case XML_ATTRIBUTE_NODE:
+            return QXmlNodeModelIndex::Attribute;
+        case XML_TEXT_NODE:
+            return QXmlNodeModelIndex::Text;
+        case XML_COMMENT_NODE:
+            return QXmlNodeModelIndex::Comment;
+        case XML_DOCUMENT_NODE:
+        case XML_HTML_DOCUMENT_NODE:
+            return QXmlNodeModelIndex::Document;
+        case XML_NAMESPACE_DECL:
+            return QXmlNodeModelIndex::Namespace;
+        case XML_PI_NODE:
+            return QXmlNodeModelIndex::ProcessingInstruction;
+    }
+
+    qDebug() << "Invalid node type" << node->type;
     return QXmlNodeModelIndex::Element;
 }
 
@@ -109,8 +208,11 @@ QLibXmlNodeModel::kind(const QXmlNodeModelIndex &node) const
  * nodes indexed by \a ni1 and \a ni2. It is used for the \c Is
  * operator and for sorting nodes in document order.
  */
-QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeModelIndex&, const QXmlNodeModelIndex&) const
+QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeModelIndex &nodeIndex1, const QXmlNodeModelIndex &nodeIndex2) const
 {
+    xmlNode *node1 = d->toNode(nodeIndex1);
+    xmlNode *node2 = d->toNode(nodeIndex2);
+    qDebug() << "compareOrder()" << node1 << node2;
     return QXmlNodeModelIndex::Precedes;
 }
 
@@ -118,9 +220,18 @@ QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeM
  * Returns the name of \a node. The caller guarantees that \a node is
  * not null and that it is contained in this node model.
  */
-QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &node) const
+QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &nodeIndex) const
 {
-    return QXmlName(namePool(), QString());
+    xmlNode *node = d->toNode(nodeIndex);
+    qDebug() << "name()" << node;
+    if (!node) {
+        qDebug() << "Invalid node";
+        return QXmlName(namePool(), QString());
+    }
+
+    qDebug() << "Node name" << (const char *)node->name;
+
+    return QXmlName(namePool(), QString((const char *)node->name));
 }
 
 /*!
@@ -128,10 +239,10 @@ QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &node) const
  * is \a n. The caller guarantees that \a n is not \c null and that it
  * identifies a node in this node model.
  */
-QXmlNodeModelIndex QLibXmlNodeModel::root(const QXmlNodeModelIndex &node) const
+QXmlNodeModelIndex QLibXmlNodeModel::root(const QXmlNodeModelIndex &nodeIndex) const
 {
-    Q_UNUSED(node);
-    return node;
+    Q_UNUSED(nodeIndex);
+    return d->toNodeIndex(d->doc);
 }
 
 /*!
@@ -142,19 +253,67 @@ QXmlNodeModelIndex QLibXmlNodeModel::root(const QXmlNodeModelIndex &node) const
  * If the QVariant is returned as a default constructed variant,
  * it means that \a node has no typed value.
  */
-QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &node) const
+QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
 {
-    Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid typed value.");
-    return QString();
+    xmlNode *node = d->toNode(nodeIndex);
+    qDebug() << "typedValue()" << node;
+    if (!node) {
+        qDebug() << "Invalid node";
+        return QVariant();
+    }
+
+    qDebug() << "Node typed value" << (const char *)node->name;
+
+    return QString((const char *)node->name);
 }
 
 /*!
  * Returns the attributes of \a element. The caller guarantees
  * that \a element is an element in this node model.
  */
-QVector<QXmlNodeModelIndex> QLibXmlNodeModel::attributes(const QXmlNodeModelIndex &element) const
+QVector<QXmlNodeModelIndex> QLibXmlNodeModel::attributes(const QXmlNodeModelIndex &nodeIndex) const
 {
+    xmlNode *node = d->toNode(nodeIndex);
+    qDebug() << "attributes()" << node;
+
     QVector<QXmlNodeModelIndex> result;
 
     return result;
+}
+
+/*!
+ * Returns the string value for node \a n.
+ *
+ * The caller guarantees that \a n is not \c null and that it belong to
+ * this QAbstractXmlNodeModel instance.
+ *
+ * This function maps to the \c dm:string-value() accessor, which the
+ * specification completely specifies. Here's a summary:
+ *
+ * \list
+ * \o For processing instructions, the string value is the data
+ * section(excluding any whitespace appearing between the name and the
+ * data).
+ * \o For text nodes, the string value equals the text node.
+ * \o For comments, the content of the comment
+ * \o For elements, the concatenation of all text nodes that are
+ * descendants. Note, this is not only the children, but the
+ * childrens' childrens' text nodes, and so forth.
+ * \o For document nodes, the concatenation of all text nodes in the
+ * document.
+ * \endlist
+ */
+QString QLibXmlNodeModel::stringValue (const QXmlNodeModelIndex &nodeIndex) const
+{
+    xmlNode *node = d->toNode(nodeIndex);
+    qDebug() << "stringValue()" << node;
+
+    if (node->type == XML_TEXT_NODE) {
+        xmlChar *buf = xmlNodeGetContent(node);
+        QString str((const char *)buf);
+        xmlFree(buf);
+        return str;
+    }
+
+    return QSimpleXmlNodeModel::stringValue(nodeIndex);
 }

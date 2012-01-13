@@ -41,17 +41,21 @@ class QLibXmlNodeModel : public QSimpleXmlNodeModel
     friend class QLibXmlNodeModelPrivate;
 
 public:
-    QLibXmlNodeModel(const QXmlNamePool &namePool, const QByteArray &source, const QUrl &uri);
+    QLibXmlNodeModel(const QXmlNamePool&, const QByteArray&, const QUrl&);
+    ~QLibXmlNodeModel();
+
+    inline QXmlNodeModelIndex dom() const { return root(QXmlNodeModelIndex()); }
 
     virtual QXmlNodeModelIndex::DocumentOrder compareOrder(const QXmlNodeModelIndex&, const QXmlNodeModelIndex&) const;
-    virtual QXmlName name(const QXmlNodeModelIndex &node) const;
-    virtual QUrl documentUri(const QXmlNodeModelIndex &node) const;
-    virtual QXmlNodeModelIndex::NodeKind kind(const QXmlNodeModelIndex &node) const;
-    virtual QXmlNodeModelIndex root(const QXmlNodeModelIndex &node) const;
-    virtual QVariant typedValue(const QXmlNodeModelIndex &node) const;
+    virtual QXmlName name(const QXmlNodeModelIndex&) const;
+    virtual QUrl documentUri(const QXmlNodeModelIndex&) const;
+    virtual QXmlNodeModelIndex::NodeKind kind(const QXmlNodeModelIndex&) const;
+    virtual QXmlNodeModelIndex root(const QXmlNodeModelIndex&) const;
+    virtual QVariant typedValue(const QXmlNodeModelIndex&) const;
+    virtual QString stringValue (const QXmlNodeModelIndex&) const;
 
 protected:
-    virtual QVector<QXmlNodeModelIndex> attributes(const QXmlNodeModelIndex &element) const;
+    virtual QVector<QXmlNodeModelIndex> attributes(const QXmlNodeModelIndex&) const;
     virtual QXmlNodeModelIndex nextFromSimpleAxis(SimpleAxis, const QXmlNodeModelIndex&) const;
 
 private:

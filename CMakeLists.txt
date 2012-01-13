@@ -25,6 +25,9 @@ find_package_handle_standard_args(LibXml2  DEFAULT_MSG
 mark_as_advanced(LIBXML2_INCLUDE_DIR LIBXML2_LIBRARY)
 
 add_definitions(${QT_DEFINITIONS} ${LIBXML2_DEFINITIONS})
-include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${QT_INCLUDES} ${LIBXML2_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} ${QT_INCLUDES} ${LIBXML2_INCLUDE_DIRS})
+
+set(BUILD_SHARED_LIBS ON)
 
 add_subdirectory(src)
+add_subdirectory(examples)
