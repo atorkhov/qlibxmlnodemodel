@@ -76,8 +76,11 @@ public:
     {
         return model->createIndex((void *)node);
     }
-
     QXmlNodeModelIndex toNodeIndex(xmlDoc *node) const
+    {
+        return model->createIndex((void *)node);
+    }
+    QXmlNodeModelIndex toNodeIndex(xmlAttr *node) const
     {
         return model->createIndex((void *)node);
     }
@@ -276,8 +279,16 @@ QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
         return QVariant();
     }
 
-    qDebug() << "Node typed value" << (const char *)node->name;
+    if (node->type == XML_ATTRIBUTE_NODE) {
+        xmlChar *buf = xmlNodeListGetString(node->doc, node->children, 1);
+        QString str = (const char *)buf;
+        xmlFree(buf);
 
+        qDebug() << "Attribute typed value" << str;
+        return str;
+    }
+
+    qDebug() << "Node typed value" << (const char *)node->name;
     return QString((const char *)node->name);
 }
 
@@ -291,6 +302,9 @@ QVector<QXmlNodeModelIndex> QLibXmlNodeModel::attributes(const QXmlNodeModelInde
     qDebug() << "attributes()" << node;
 
     QVector<QXmlNodeModelIndex> result;
+    for (xmlAttr *cur = node->properties; cur != NULL; cur = cur->next) {
+        result += d->toNodeIndex(cur);
+    }
 
     return result;
 }
