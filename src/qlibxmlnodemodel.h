@@ -1,11 +1,10 @@
 /*
- * qlibxmlnodemodel - A QAbstractXmlNodeModel that uses libxml2 library
+ * qlibxmlnodemodel - A QAbstractXmlNodeModel for using with libxml2 library
  * Copyright (C) 2012 Alexey Torkhov
  * Copyright (C) 2011 Jonas Gehring
- * Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
  * All rights reserved.
  *
- * Based on qhtmlnodemodel by Jonas Gehring and QT examples
+ * Based on qhtmlnodemodel by Jonas Gehring
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

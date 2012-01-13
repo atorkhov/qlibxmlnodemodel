@@ -1,0 +1,11 @@
+qlibxmlnodemodel - A QAbstractXmlNodeModel for using with libxml2 library
+=========================================================================
+
+qlibxmlnodemodel is a QAbstractXmlNodeModel implementation for libxml2 library.
+It uses libxml2 for HTML parsing and offers the document as a custom XML node
+model that can be used with Qt's XmlPatterns module. This allows you to use
+XPath, XQuery, XSLT and other fun stuff by standard QT means on HTML documents
+that aren't valid XML.
+
+Usage is quite simple - please take a look at the examples and / or read
+the usage notes at http://doc.qt.nokia.com/qabstractxmlnodemodel.html#usage

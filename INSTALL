@@ -1,0 +1,13 @@
+qlibxmlnodemodel - A QAbstractXmlNodeModel for using with libxml2 library
+=========================================================================
+
+QLibXmlNodeModel obviously depends on Qt, version 4.6 or higher. If
+you're on *nix (Linux, BSD, Mac OS X ...), install libxml2 and run
+
+$ mkdir build && cd build
+$ cmake .. -DCMAKE_INSTALL_PREFIX=/path/to/installation/prefix
+$ make
+$ make install
+
+To create debug build pass to cmake -DCMAKE_BUILD_TYPE=Debug option. This is a
+standard cmake option, see the cmake man page for details.
