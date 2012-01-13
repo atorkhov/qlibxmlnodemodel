@@ -83,12 +83,26 @@ public:
     }
 };
 
+void libXmlErrorFunc(void *ctx, const char *msg, ...)
+{
+   char buf[1024];
+   va_list args;
+   va_start(args, msg);
+   vsnprintf(buf, 1024, msg, args);
+   va_end(args);
+
+   qDebug() << buf;
+   return;
+}
+
 /*!
  * Constructor passes \a pool to the base class
  */
 QLibXmlNodeModel::QLibXmlNodeModel(const QXmlNamePool& namePool, const QByteArray &source, const QUrl &uri)
     : QSimpleXmlNodeModel(namePool), d(new QLibXmlNodeModelPrivate(this))
 {
+    xmlSetGenericErrorFunc(NULL, libXmlErrorFunc);
+
     d->uri = uri;
     d->parse(source);
 }
