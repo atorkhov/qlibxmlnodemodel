@@ -46,11 +46,16 @@ public:
     QUrl uri;
 
     xmlDoc *doc;
-    xmlNode *root_element;
 
     QLibXmlNodeModelPrivate(QLibXmlNodeModel *model)
-        : model(model), doc(NULL), root_element(NULL)
+        : model(model), doc(NULL)
     {
+    }
+
+    ~QLibXmlNodeModelPrivate()
+    {
+        xmlFreeDoc(doc);
+        doc = NULL;
     }
 
     // Parses the given source tree
@@ -61,8 +66,6 @@ public:
         if (doc == NULL) {
             qDebug() << "could not parse source" << source;
         }
-
-        root_element = xmlDocGetRootElement(doc);
     }
 
     // Converts a model index to a HTML node
@@ -204,6 +207,7 @@ QLibXmlNodeModel::kind(const QXmlNodeModelIndex &nodeIndex) const
         case XML_ATTRIBUTE_NODE:
             return QXmlNodeModelIndex::Attribute;
         case XML_TEXT_NODE:
+        case XML_CDATA_SECTION_NODE:
             return QXmlNodeModelIndex::Text;
         case XML_COMMENT_NODE:
             return QXmlNodeModelIndex::Comment;
@@ -247,7 +251,6 @@ QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &nodeIndex) const
     }
 
     qDebug() << "Node name" << (const char *)node->name;
-
     return QXmlName(namePool(), QString((const char *)node->name));
 }
 
@@ -336,7 +339,9 @@ QString QLibXmlNodeModel::stringValue (const QXmlNodeModelIndex &nodeIndex) cons
     xmlNode *node = d->toNode(nodeIndex);
     qDebug() << "stringValue()" << node;
 
-    if (node->type == XML_TEXT_NODE) {
+    if (node->type == XML_TEXT_NODE ||
+        node->type == XML_CDATA_SECTION_NODE ||
+        node->type == XML_COMMENT_NODE) {
         xmlChar *buf = xmlNodeGetContent(node);
         QString str((const char *)buf);
         xmlFree(buf);
