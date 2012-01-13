@@ -250,7 +250,7 @@ QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &nodeIndex) const
     }
 
     qDebug() << "Node name" << (const char *)node->name;
-    return QXmlName(namePool(), QString((const char *)node->name));
+    return QXmlName(namePool(), QString::fromUtf8((const char *)node->name));
 }
 
 /*!
@@ -283,7 +283,7 @@ QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
 
     if (node->type == XML_ATTRIBUTE_NODE) {
         xmlChar *buf = xmlNodeListGetString(node->doc, node->children, 1);
-        QString str = (const char *)buf;
+        QString str = QString::fromUtf8((const char *)buf);
         xmlFree(buf);
 
         qDebug() << "Attribute typed value" << str;
@@ -291,7 +291,7 @@ QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
     }
 
     qDebug() << "Node typed value" << (const char *)node->name;
-    return QString((const char *)node->name);
+    return QString::fromUtf8((const char *)node->name);
 }
 
 /*!
@@ -342,8 +342,9 @@ QString QLibXmlNodeModel::stringValue (const QXmlNodeModelIndex &nodeIndex) cons
         node->type == XML_CDATA_SECTION_NODE ||
         node->type == XML_COMMENT_NODE) {
         xmlChar *buf = xmlNodeGetContent(node);
-        QString str((const char *)buf);
+        QString str = QString::fromUtf8((const char *)buf);
         xmlFree(buf);
+
         return str;
     }
 
