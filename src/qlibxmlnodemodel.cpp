@@ -281,17 +281,12 @@ QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
         return QVariant();
     }
 
-    if (node->type == XML_ATTRIBUTE_NODE) {
-        xmlChar *buf = xmlNodeListGetString(node->doc, node->children, 1);
-        QString str = QString::fromUtf8((const char *)buf);
-        xmlFree(buf);
+    xmlChar *buf = xmlNodeListGetString(node->doc, node->children, 1);
+    QString str = QString::fromUtf8((const char *)buf);
+    xmlFree(buf);
 
-        qDebug() << "Attribute typed value" << str;
-        return str;
-    }
-
-    qDebug() << "Node typed value" << (const char *)node->name;
-    return QString::fromUtf8((const char *)node->name);
+    qDebug() << "Attribute typed value" << str;
+    return str;
 }
 
 /*!
