@@ -8,6 +8,8 @@ URL:            https://github.com/atorkhov/qlibxmlnodemodel
 Source0:        qlibxmlnodemodel-0.1.tar.bz2
 
 BuildRequires:  cmake qt-devel libxml2-devel
+# For qt4 cmake module:
+BuildRequires:  kdelibs-devel
 
 %description
 qlibxmlnodemodel is a QAbstractXmlNodeModel implementation for libxml2 library.

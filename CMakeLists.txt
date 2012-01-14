@@ -9,6 +9,7 @@ if (NOT DEFINED ${INCLUDE_INSTALL_DIR})
 endif (NOT DEFINED ${INCLUDE_INSTALL_DIR})
 
 find_package(Qt4 REQUIRED)
+include(${QT_USE_FILE})
 
 find_package(PkgConfig)
 pkg_check_modules(PC_LIBXML QUIET libxml-2.0)
