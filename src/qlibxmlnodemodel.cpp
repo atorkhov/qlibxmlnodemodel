@@ -129,36 +129,36 @@ QXmlNodeModelIndex
 QLibXmlNodeModel::nextFromSimpleAxis(SimpleAxis axis, const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
-    qDebug() << "nextFromSimpleAxis()" << node << axis;
+    //qDebug() << "nextFromSimpleAxis()" << node << axis;
     if (!node) {
-        qDebug() << "Invalid node";
+        //qDebug() << "Invalid node";
         return QXmlNodeModelIndex();
     }
 
     switch (axis) {
         case Parent:
-            qDebug() << "Parent " << node->parent;
+            //qDebug() << "Parent " << node->parent;
             if (!node->parent) {
                 return QXmlNodeModelIndex();
             }
             return d->toNodeIndex(node->parent);
 
         case FirstChild:
-            qDebug() << "Child " << node->children;
+            //qDebug() << "Child " << node->children;
             if (!node->children) {
                 return QXmlNodeModelIndex();
             }
             return d->toNodeIndex(node->children);
 
         case PreviousSibling:
-            qDebug() << "Prev " << node->prev;
+            //qDebug() << "Prev " << node->prev;
             if (!node->prev) {
                 return QXmlNodeModelIndex();
             }
             return d->toNodeIndex(node->prev);
 
         case NextSibling:
-            qDebug() << "Next " << node->next;
+            //qDebug() << "Next " << node->next;
             if (!node->next) {
                 return QXmlNodeModelIndex();
             }
@@ -192,13 +192,9 @@ QXmlNodeModelIndex::NodeKind
 QLibXmlNodeModel::kind(const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
-    qDebug() << "kind()" << node;
-    if (!node) {
-        qDebug() << "Invalid node";
-        return QXmlNodeModelIndex::Element;
-    }
+    //qDebug() << "kind()" << node;
 
-    qDebug() << "Node type" << node->type;
+    //qDebug() << "Node type" << node->type;
 
     switch (node->type) {
         case XML_ELEMENT_NODE:
@@ -217,10 +213,13 @@ QLibXmlNodeModel::kind(const QXmlNodeModelIndex &nodeIndex) const
             return QXmlNodeModelIndex::Namespace;
         case XML_PI_NODE:
             return QXmlNodeModelIndex::ProcessingInstruction;
+        // Don't show message
+        case XML_DTD_NODE:
+            return QXmlNodeModelIndex::Text;
     }
 
-    qDebug() << "Invalid node type" << node->type;
-    return QXmlNodeModelIndex::Element;
+    //qDebug() << "Node type is not handled properly in kind()" << node->type;
+    return QXmlNodeModelIndex::Text;
 }
 
 /*!
@@ -234,7 +233,7 @@ QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeM
     xmlNode *node2 = d->toNode(nodeIndex2);
     xmlNode *cur;
 
-    qDebug() << "compareOrder()" << node1 << node2;
+    //qDebug() << "compareOrder()" << node1 << node2;
 
     // Check is nodes are root
     if (node1->parent == NULL) {
@@ -307,13 +306,10 @@ QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeM
 QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
-    qDebug() << "name()" << node;
-    if (!node) {
-        qDebug() << "Invalid node";
-        return QXmlName(namePool(), QString());
-    }
+    //qDebug() << "name()" << node;
+    Q_ASSERT_X(node, Q_FUNC_INFO, "Invalid node");
 
-    qDebug() << "Node name" << (const char *)node->name;
+    //qDebug() << "Node name" << (const char *)node->name;
     return QXmlName(namePool(), QString::fromUtf8((const char *)node->name));
 }
 
@@ -339,17 +335,14 @@ QXmlNodeModelIndex QLibXmlNodeModel::root(const QXmlNodeModelIndex &nodeIndex) c
 QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
-    qDebug() << "typedValue()" << node;
-    if (!node) {
-        qDebug() << "Invalid node";
-        return QVariant();
-    }
+    //qDebug() << "typedValue()" << node;
+    Q_ASSERT_X(node, Q_FUNC_INFO, "Invalid node");
 
     xmlChar *buf = xmlNodeListGetString(node->doc, node->children, 1);
     QString str = QString::fromUtf8((const char *)buf);
     xmlFree(buf);
 
-    qDebug() << "Attribute typed value" << str;
+    //qDebug() << "Attribute typed value" << str;
     return str;
 }
 
@@ -360,7 +353,8 @@ QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
 QVector<QXmlNodeModelIndex> QLibXmlNodeModel::attributes(const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
-    qDebug() << "attributes()" << node;
+    //qDebug() << "attributes()" << node;
+    Q_ASSERT_X(node, Q_FUNC_INFO, "Invalid node");
 
     QVector<QXmlNodeModelIndex> result;
     for (xmlAttr *cur = node->properties; cur != NULL; cur = cur->next) {
@@ -395,7 +389,7 @@ QVector<QXmlNodeModelIndex> QLibXmlNodeModel::attributes(const QXmlNodeModelInde
 QString QLibXmlNodeModel::stringValue (const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
-    qDebug() << "stringValue()" << node;
+    //qDebug() << "stringValue()" << node;
 
     if (node->type == XML_TEXT_NODE ||
         node->type == XML_CDATA_SECTION_NODE ||
@@ -407,5 +401,13 @@ QString QLibXmlNodeModel::stringValue (const QXmlNodeModelIndex &nodeIndex) cons
         return str;
     }
 
-    return QSimpleXmlNodeModel::stringValue(nodeIndex);
+    if (node->type == XML_ELEMENT_NODE ||
+        node->type == XML_ATTRIBUTE_NODE) {
+        return QSimpleXmlNodeModel::stringValue(nodeIndex);
+    }
+
+    // TODO: handle other node types
+    //qDebug() << "Node type is not handled properly in stringValue()" << node->type;
+
+    return QString();
 }
