@@ -232,7 +232,71 @@ QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeM
 {
     xmlNode *node1 = d->toNode(nodeIndex1);
     xmlNode *node2 = d->toNode(nodeIndex2);
+    xmlNode *cur;
+
     qDebug() << "compareOrder()" << node1 << node2;
+
+    // Check is nodes are root
+    if (node1->parent == NULL) {
+        return QXmlNodeModelIndex::Precedes;
+    }
+    if (node2->parent == NULL) {
+        return QXmlNodeModelIndex::Follows;
+    }
+
+    // Find nodes which has common parent
+    if (node1->parent != node2->parent) {
+        QList<xmlNode*> tree1;
+        QList<xmlNode*> tree2;
+
+        // Build trees for node1 and node2
+        for (cur = node1->parent; cur != NULL; cur = cur->parent) {
+            tree1.push_front(cur);
+        }
+        for (cur = node2->parent; cur != NULL; cur = cur->parent) {
+            tree2.push_front(cur);
+        }
+
+        // Find last common element in lists (common parent of nodes)
+        QList<xmlNode*>::const_iterator iter1;
+        QList<xmlNode*>::const_iterator iter2;
+        node1 = node2 = NULL;
+        for (iter1 = tree1.begin(), iter2 = tree2.begin(); iter1 != tree1.end() && iter2 != tree2.end(); ++iter1, ++iter2) {
+            if (*iter1 != *iter2) {
+                break;
+            }
+        }
+
+        // One node is successor of another
+        if (iter1 == tree1.end()) {
+            return QXmlNodeModelIndex::Precedes;
+        }
+        if (iter2 == tree2.end()) {
+            return QXmlNodeModelIndex::Follows;
+        }
+
+        // Asign nodes from nodes' tree which are children of common parent
+        node1 = *iter1;
+        node2 = *iter2;
+
+        //qDebug() << tree1 << tree2 << node1 << node2;
+        Q_ASSERT_X(node1 && node2, Q_FUNC_INFO, "Nodes has no common parent");
+    }
+
+    Q_ASSERT_X(node1 != node2, Q_FUNC_INFO, "Different nodes' parent is equal");
+    Q_ASSERT_X(node1->parent == node2->parent, Q_FUNC_INFO, "Common parent is found improperly");
+    Q_ASSERT_X(node1->parent->children, Q_FUNC_INFO, "Node parent has no children");
+
+    // Find which node precedes
+    for (cur = node1->parent->children; cur != NULL; cur = cur->next) {
+        if (cur == node1) {
+            return QXmlNodeModelIndex::Precedes;
+        } else if (cur == node2) {
+            return QXmlNodeModelIndex::Follows;
+        }
+    }
+
+    Q_ASSERT_X(false, Q_FUNC_INFO, "Should not get here");
     return QXmlNodeModelIndex::Precedes;
 }
 
