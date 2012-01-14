@@ -8,7 +8,7 @@ URL:            https://github.com/atorkhov/qlibxmlnodemodel
 Source0:        qlibxmlnodemodel-0.1.tar.bz2
 
 BuildRequires:  cmake qt-devel libxml2-devel
-# For qt4 cmake module:
+# For qt4 and libxml2 cmake modules:
 BuildRequires:  kdelibs-devel
 
 %description
