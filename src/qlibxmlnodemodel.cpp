@@ -338,7 +338,7 @@ QVariant QLibXmlNodeModel::typedValue(const QXmlNodeModelIndex &nodeIndex) const
     //qDebug() << "typedValue()" << node;
     Q_ASSERT_X(node, Q_FUNC_INFO, "Invalid node");
 
-    xmlChar *buf = xmlNodeListGetString(node->doc, node->children, 1);
+    xmlChar *buf = xmlNodeGetContent(node);
     QString str = QString::fromUtf8((const char *)buf);
     xmlFree(buf);
 
