@@ -193,6 +193,10 @@ QLibXmlNodeModel::kind(const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
     //qDebug() << "kind()" << node;
+    if (!node) {
+        //qDebug() << "Invalid node";
+        return QXmlNodeModelIndex::Document;
+    }
 
     //qDebug() << "Node type" << node->type;
 
@@ -231,6 +235,15 @@ QXmlNodeModelIndex::DocumentOrder QLibXmlNodeModel::compareOrder(const QXmlNodeM
 {
     xmlNode *node1 = d->toNode(nodeIndex1);
     xmlNode *node2 = d->toNode(nodeIndex2);
+    if (!node1) {
+        //qDebug() << "Invalid node";
+        return QXmlNodeModelIndex::Precedes;
+    }
+    if (!node2) {
+        //qDebug() << "Invalid node";
+        return QXmlNodeModelIndex::Follows;
+    }
+
     xmlNode *cur;
 
     //qDebug() << "compareOrder()" << node1 << node2;
@@ -307,7 +320,10 @@ QXmlName QLibXmlNodeModel::name(const QXmlNodeModelIndex &nodeIndex) const
 {
     xmlNode *node = d->toNode(nodeIndex);
     //qDebug() << "name()" << node;
-    Q_ASSERT_X(node, Q_FUNC_INFO, "Invalid node");
+    if (!node) {
+        //qDebug() << "Invalid node";
+        return QXmlName(namePool(), QString());
+    }
 
     //qDebug() << "Node name" << (const char *)node->name;
     return QXmlName(namePool(), QString::fromUtf8((const char *)node->name));
